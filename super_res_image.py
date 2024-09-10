@@ -66,7 +66,7 @@ if __name__ == '__main__':
         newImage = concat_image(resized_img)
 
         path = "imgProcessed/" + image
-        print(path)
+        print("Creando imagen {} .........".format(path))
         cv2.imwrite(path, newImage)
 
     print('Fin de procesamiento de imagenes')
