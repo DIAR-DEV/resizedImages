@@ -5,43 +5,28 @@ import cv2
 import os
 import numpy as np
 
-
+###################################################
+# Constantes 
 side = 1000
-
-def super_resolution():
-    # construct the argument parser and parse the arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-m", "--model", required=True,
-        help="path to super resolution model")
-    ap.add_argument("-i", "--image", required=True,
-        help="path to input image we want to increase resolution of")
-    args = vars(ap.parse_args())
+img_path = "./examples"
+###################################################
 
 
+
+def super_resolution_to_img(img_path):
     sr = cv2.dnn_superres.DnnSuperResImpl_create()
-    sr.readModel(args["model"])
-
+    sr.readModel("models/ESPCN_x4.pb")
     sr.setModel("espcn", 4)
-
     # load the input image from disk and display its spatial dimensions
-    image = cv2.imread(args["image"])
-    # print(image)
+    image = cv2.imread(img_path)
     print("[INFO] w: {}, h: {}".format(image.shape[1], image.shape[0]))
-    # use the super resolution model to upscale the image, timing how
-    # long it takes
-    start = time.time()
     upscaled = sr.upsample(image)
-    end = time.time()
-    print("[INFO] super resolution took {:.6f} seconds".format(
-        end - start))
     # show the spatial dimensions of the super resolution image
-    print("[INFO] w: {}, h: {}".format(upscaled.shape[1],
-    upscaled.shape[0]))
-
-    return upscaled, args["image"]
+    print("[INFO] w: {}, h: {}".format(upscaled.shape[1], upscaled.shape[0]))
+    return upscaled
 
 
-def resizing(img):
+def resizing_img(img):
     if img.shape[0] < img.shape[1]: #Imagen ancha
         r = side/img.shape[1]
         dim = (side, int(img.shape[0] * r))
@@ -70,18 +55,21 @@ def concat_image(upscaled):
 
 
 
-upscaled, image_name = super_resolution()
-upscaled=resizing(upscaled)
-newImage = concat_image(upscaled)
+if __name__ == '__main__':
+    print('Inicio de procesamiento de imagenes')
+    img_list_to_processed = [file for file in os.listdir(img_path) if file.endswith('png') or file.endswith('jpg')]
 
+    for image in img_list_to_processed:
+        file_name = "/".join([img_path, image])
+        upscaled = super_resolution_to_img(file_name)
+        resized_img = resizing_img(upscaled)
+        newImage = concat_image(resized_img)
 
-image_name = image_name.replace("examples/", "")
-path = "imgProcessed/" + image_name
+        path = "imgProcessed/" + image
+        print(path)
+        cv2.imwrite(path, newImage)
 
-cv2.imwrite(path, newImage)
-# cv2.imshow("Concat image", newImage)
-
-cv2.waitKey(0)
+    print('Fin de procesamiento de imagenes')
 
 
 
